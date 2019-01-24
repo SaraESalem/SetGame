@@ -10,13 +10,15 @@ import Foundation
 
 struct Card :Hashable {
     
-    var isMatched : Bool = false
+    var hashValue: Int {return id}
     
+    var isMatched : Bool = false
     var shape:Shape
     var shading:Shading
     var color:Color
     var number:Number
     var id:Int
+    
     enum Shape:String,CustomStringConvertible {
         
         var description: String{
@@ -37,15 +39,13 @@ struct Card :Hashable {
         static var allShapes = [Shape.square,.circle,.triangle]
     }
     enum Shading :String,CustomStringConvertible{
-    
+        
         var description: String{
             return rawValue
         }
         case filled = "filled"
         case opened = "opened"
         case striped = "striped"
-        
-        static var allShading = [Shading.filled,.opened,.striped]
         
         var shadingVal: [String:Float] {
             switch self {
@@ -54,7 +54,11 @@ struct Card :Hashable {
             case .striped :  return ["alpha": 0.35,"stroke":0.0]
             }
         }
+        
+        static var allShading = [Shading.filled,.opened,.striped]
+        
     }
+    
     enum Color:String ,CustomStringConvertible{
         var description: String{
             return rawValue
@@ -74,7 +78,7 @@ struct Card :Hashable {
         
         static var allColors = [Color.black,.blue,.brown]
     }
-    enum Number:String , CustomStringConvertible{
+    enum Number:String , CustomStringConvertible {
         var description: String{
             return rawValue
         }
@@ -92,6 +96,5 @@ struct Card :Hashable {
         
         static var allNumbers = [Number.one,.two,.three]
     }
-    var hashValue: Int {return id}
     
 }

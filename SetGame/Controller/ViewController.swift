@@ -17,11 +17,46 @@ class ViewController: UIViewController {
         scoreValue = 0
         deal3MoreCard.isEnabled = true
     }
+    @IBOutlet var cardButtons: [UIButton]!
+    @IBAction func deal3MoreCard(_ sender: UIButton) {
+        dealThreeMoreCard()
+    }
+    @IBAction func selectCard(_ sender: UIButton) {
+        
+        if let cardIndex = cardButtons.index(of: sender){
+            game.selectCard(at: cardIndex){ [weak self] (result,type) in
+                self?.scoreValue += result
+                if type == Set.Result.match {
+                    self?.dealThreeMoreCard()
+                }
+            }
+            updateViewFromModel()
+        }
+    }
+    
+    private lazy var game = Set(numberOfSetCards: numberOfSetCards)
+    private var numberOfCardsToShowOnGameStart:Int{
+        return numberOfSetCards/2
+    }
+    private var numberOfSetCards:Int{
+        return cardButtons.count
+    }
+    private var numberOfCardsToDeal = 3
+    private(set) var scoreValue = 0 { //property observer
+        didSet {
+            updateScoreLabel()
+        }
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        startGame()
+    }
     func startGame(){
-        for index in 0...11 {
+        for index in 0...numberOfCardsToShowOnGameStart-1 { //0 - 11
             drawCards(on:index,isHidden:false)
         }
-        for index in 12...23{
+        for index in numberOfCardsToShowOnGameStart...numberOfSetCards-1 { //12-23
             let button = cardButtons[index]
             button.isHidden = true
         }
@@ -29,7 +64,7 @@ class ViewController: UIViewController {
     }
     func dealThreeMoreCard(){
         if game.cardsToAppearsLater.count > 0{
-            for _ in 0...2 {
+            for _ in 1...numberOfCardsToDeal {
                 let card = game.getCard()
                 drawCards(on:card.id,isHidden:false)
             }
@@ -38,38 +73,31 @@ class ViewController: UIViewController {
             deal3MoreCard.isEnabled = false
         }
     }
-    @IBAction func deal3MoreCard(_ sender: UIButton) {
-        dealThreeMoreCard()
-    }
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        startGame()
-    }
-    private var dictionaryOfRelatedData = [Card:[String:Any]]()
+    
     func drawCards(on index :Int , isHidden:Bool){
-            let button = cardButtons[index]
-            let card = game.cards[index]
+        let button = cardButtons[index]
+        let card = game.cards[index]
         let numer = card.number.numberVal
-            var noOfShapes = ""
-            for _ in  1...numer {
-                noOfShapes += card.shape.shapeVal
-            }
+        var noOfShapes = ""
+        for _ in  1...numer {
+            noOfShapes += card.shape.shapeVal
+        }
         let cardcolor = card.color.colorVal
-            var colorWithShading : UIColor;
-            switch cardcolor {
-                case "blue" : colorWithShading = #colorLiteral(red: 0.2196078449, green: 0.007843137719, blue: 0.8549019694, alpha: 1)
-                case "brown" : colorWithShading = #colorLiteral(red: 0.521568656, green: 0.1098039225, blue: 0.05098039284, alpha: 1)
-                case "black" : colorWithShading = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
-                default: colorWithShading = #colorLiteral(red: 0.8039215803, green: 0.8039215803, blue: 0.8039215803, alpha: 1)
-            }
-            let shading = card.shading
-            setTitle(of : button,with: noOfShapes,andColor: colorWithShading.withAlphaComponent(CGFloat(shading.shadingVal["alpha"]!))
-                , andStroke : CGFloat(shading.shadingVal["stroke"]!))
-            button.layer.cornerRadius = 8.0
-            button.backgroundColor = #colorLiteral(red: 0.9999960065, green: 1, blue: 1, alpha: 1)
-            if !isHidden {
-                button.isHidden = isHidden
-            }
+        var colorWithShading : UIColor;
+        switch cardcolor {
+            case "blue" : colorWithShading = #colorLiteral(red: 0.2196078449, green: 0.007843137719, blue: 0.8549019694, alpha: 1)
+            case "brown" : colorWithShading = #colorLiteral(red: 0.521568656, green: 0.1098039225, blue: 0.05098039284, alpha: 1)
+            case "black" : colorWithShading = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
+            default: colorWithShading = #colorLiteral(red: 0.8039215803, green: 0.8039215803, blue: 0.8039215803, alpha: 1)
+        }
+        let shading = card.shading
+        setTitle(of : button,with: noOfShapes,andColor: colorWithShading.withAlphaComponent(CGFloat(shading.shadingVal["alpha"]!))
+            , andStroke : CGFloat(shading.shadingVal["stroke"]!))
+        button.layer.cornerRadius = 8.0
+        button.backgroundColor = #colorLiteral(red: 0.9999960065, green: 1, blue: 1, alpha: 1)
+        if !isHidden {
+            button.isHidden = isHidden
+        }
     }
     private func setTitle(of button : UIButton , with title : String , andColor: UIColor, andStroke:CGFloat){
         let font = UIFont.systemFont(ofSize: 23)
@@ -104,24 +132,7 @@ class ViewController: UIViewController {
             }
         }
     }
-    private var numberOfSetCards:Int{
-        return cardButtons.count
-    }
-    private lazy var game = Set(numberOfSetCards: numberOfSetCards)
 
-    @IBOutlet var cardButtons: [UIButton]!
-    @IBAction func selectCard(_ sender: UIButton) {
-        
-        if let cardIndex = cardButtons.index(of: sender){
-            game.selectCard(at: cardIndex){ [unowned self] (result,type) in
-                    self.scoreValue += result
-                if type == Set.Result.match {
-                    self.dealThreeMoreCard()
-                }
-            }
-            updateViewFromModel()
-        }
-    }
     private func updateScoreLabel(){
         let attributes: [NSAttributedString.Key:Any] = [
             .strokeWidth: 5.0,
@@ -129,11 +140,6 @@ class ViewController: UIViewController {
         ]
         let attribText = NSAttributedString(string: "Score: \(scoreValue)", attributes: attributes)
         scoreLabel.attributedText = attribText
-    }
-    private(set) var scoreValue = 0 { //property observer
-        didSet {
-            updateScoreLabel()
-        }
     }
 }
 extension Int{
